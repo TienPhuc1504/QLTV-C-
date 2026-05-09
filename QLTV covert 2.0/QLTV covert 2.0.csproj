@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{86CB5768-03E4-4145-864A-12680CD9B82D}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>QLTV_covert_2._0</RootNamespace>
+    <AssemblyName>QLTV covert 2.0</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FontAwesome.Sharp, Version=6.6.0.0, Culture=neutral, PublicKeyToken=d16d1e4e568ec10f, processorArchitecture=MSIL">
+      <HintPath>..\packages\FontAwesome.Sharp.6.6.0\lib\net472\FontAwesome.Sharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Guna.UI2, Version=2.0.4.7, Culture=neutral, PublicKeyToken=8b9d14aa5142e261, processorArchitecture=MSIL">
+      <HintPath>..\packages\Guna.UI2.WinForms.2.0.4.7\lib\net472\Guna.UI2.dll</HintPath>
+    </Reference>
+    <Reference Include="MaterialSkin, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MaterialSkin.2.2.3.1\lib\net461\MaterialSkin.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data\BookRepository.cs" />
+    <Compile Include="Data\BorrowRepository.cs" />
+    <Compile Include="Data\DatabaseManager.cs" />
+    <Compile Include="Data\LibraryService.cs" />
+    <Compile Include="Data\ReaderRepository.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\BookManagementForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\BorrowManagementForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LibraryFeatureForms.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ReaderManagementForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Models\Book.cs" />
+    <Compile Include="Models\Borrow.cs" />
+    <Compile Include="Models\User.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\AppConfig.cs" />
+    <Compile Include="Utilities\FormHelper.cs" />
+    <Compile Include="Utilities\AppTheme.cs" />
+    <EmbeddedResource Include="Forms\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="CHECKLIST.md" />
+    <None Include="COMPLETION_REPORT.md" />
+    <None Include="DEVELOPMENT.md" />
+    <None Include="FINAL_REPORT.md" />
+    <None Include="IMPLEMENTATION_GUIDE.md" />
+    <None Include="INDEX.md" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="QLTV\.vs\QLTV.slnx\FileContentIndex\a0c20f79-d11f-49c9-be4b-9baf3fee5d83.vsidx" />
+    <None Include="QLTV\.vs\QLTV.slnx\v18\DocumentLayout.backup.json" />
+    <None Include="QLTV\.vs\QLTV.slnx\v18\DocumentLayout.json" />
+    <None Include="QLTV\.vs\QLTV\CopilotIndices\18.5.39187.10602\CodeChunks.db" />
+    <None Include="QLTV\.vs\QLTV\CopilotIndices\18.5.39187.10602\SemanticSymbols.db" />
+    <None Include="QLTV\.vs\slnx.sqlite" />
+    <None Include="QLTV\.vs\VSWorkspaceState.json" />
+    <None Include="QLTV\library.db" />
+    <None Include="QLTV\library_backup.db" />
+    <None Include="QLTV\README.md" />
+    <None Include="QLTV\reports\phieu_muon_14_20260115_001259.pdf" />
+    <None Include="QLTV\reports\phieu_muon_17_20260115_140756.pdf" />
+    <None Include="QLTV\reports\phieu_muon_2_20260109_003334.pdf" />
+    <None Include="QLTV\reports\phieu_muon_2_20260109_005950.pdf" />
+    <None Include="QLTV\reports\phieu_muon_2_20260112_220019.pdf" />
+    <None Include="QLTV\reports\phieu_muon_3_20260109_003957.pdf" />
+    <None Include="QLTV\reports\phieu_muon_9_20260113_114323.pdf" />
+    <None Include="QLTV\reports\phieu_tra_14_20260115_001535.pdf" />
+    <None Include="QLTV\reports\phieu_tra_2_20260112_220030.pdf" />
+    <None Include="QLTV\reports\phieu_tra_9_20260113_114435.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG0005_20260113_000404.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG0006_20260113_013746.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG001_20260112_001133.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG001_20260112_220319.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG002_20260115_000918.pdf" />
+    <None Include="QLTV\reports\the_doc_gia_DG002_20260115_000943.pdf" />
+    <None Include="QLTV\reports\thong_ke_muon_tra_20260108_235755.pdf" />
+    <None Include="QLTV\reports\thong_ke_muon_tra_20260109_001921.pdf" />
+    <None Include="QLTV\reports\thong_ke_muon_tra_20260112_215941.pdf" />
+    <None Include="QLTV\reports\thong_ke_muon_tra_20260115_003504.pdf" />
+    <None Include="QLTV\reports\thong_ke_sach_20260109_004046.pdf" />
+    <None Include="QLTV\reports\thong_ke_sach_20260112_215912.pdf" />
+    <None Include="QLTV\reports\thong_ke_sach_20260115_003622.pdf" />
+    <None Include="QLTV\utils\__pycache__\report_generator.cpython-313.pyc" />
+    <None Include="QLTV\utils\__pycache__\__init__.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\account_view.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\book_management.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\borrow_management.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\borrow_requests.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\login_view.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\main_view.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\my_borrows.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\my_requests.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\notifications.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\reader_management.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\search_books.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\staff_management.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\statistics_view.cpython-313.pyc" />
+    <None Include="QLTV\views\__pycache__\__init__.cpython-313.pyc" />
+    <None Include="QLTV\__pycache__\database.cpython-313.pyc" />
+    <None Include="QUICKSTART.md" />
+    <None Include="README.md" />
+    <None Include="README_CS.md" />
+    <None Include="START_HERE.md" />
+    <None Include="SUMMARY.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="QLTV\database.py" />
+    <Content Include="QLTV\main.py" />
+    <Content Include="QLTV\requirements.txt" />
+    <Content Include="QLTV\utils\report_generator.py" />
+    <Content Include="QLTV\utils\__init__.py" />
+    <Content Include="QLTV\views\account_view.py" />
+    <Content Include="QLTV\views\book_management.py" />
+    <Content Include="QLTV\views\borrow_management.py" />
+    <Content Include="QLTV\views\borrow_requests.py" />
+    <Content Include="QLTV\views\login_view.py" />
+    <Content Include="QLTV\views\main_view.py" />
+    <Content Include="QLTV\views\my_borrows.py" />
+    <Content Include="QLTV\views\my_requests.py" />
+    <Content Include="QLTV\views\notifications.py" />
+    <Content Include="QLTV\views\reader_management.py" />
+    <Content Include="QLTV\views\search_books.py" />
+    <Content Include="QLTV\views\staff_management.py" />
+    <Content Include="QLTV\views\statistics_view.py" />
+    <Content Include="QLTV\views\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="QLTV\.vs\QLTV.slnx\copilot-chat\7ec76fb8\sessions\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+</Project>

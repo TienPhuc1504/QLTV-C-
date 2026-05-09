@@ -1,0 +1,39 @@
+# Build results
+bin/
+obj/
+Release/
+Debug/
+Debug_verify/
+Debug2/
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# .NET
+.dotnet/
+*.exe
+*.dll
+*.pdb
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# NuGet
+packages/
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
