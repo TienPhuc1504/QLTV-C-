@@ -37,3 +37,7 @@ packages/
 
 # Dependencies
 node_modules/
+
+# SQLite temp files
+*.db-shm
+*.db-wal

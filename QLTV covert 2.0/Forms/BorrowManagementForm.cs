@@ -156,6 +156,17 @@ namespace QLTV_covert_2._0.Forms
             _grid = new Guna2DataGridView { Dock = DockStyle.Fill };
             AppTheme.StyleGrid(_grid);
             _grid.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) ViewDetail(); };
+            _grid.CellFormatting += (s, e) =>
+            {
+                if (e.ColumnIndex >= 0 && _grid.Columns[e.ColumnIndex].Name == "Tiền phạt" && e.Value != null)
+                {
+                    if (decimal.TryParse(e.Value.ToString(), out decimal val))
+                    {
+                        e.Value = val > 0 ? val.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ" : "0đ";
+                        e.FormattingApplied = true;
+                    }
+                }
+            };
             Controls.Add(_grid);
             _grid.BringToFront();
         }
@@ -183,7 +194,11 @@ namespace QLTV_covert_2._0.Forms
                            WHEN date(p.ngay_hen_tra) < date('now') THEN '⚠️ Quá hạn'
                            ELSE '📖 Đang mượn'
                        END AS 'Trạng thái',
-                       COALESCE(p.tien_phat, 0) AS 'Tiền phạt'
+                       CASE 
+                           WHEN p.trang_thai_phieu = 'DA_TRA' THEN COALESCE(p.tien_phat, 0)
+                           WHEN julianday('now') > julianday(p.ngay_hen_tra) THEN CAST((julianday('now') - julianday(p.ngay_hen_tra)) * 5000 AS INTEGER)
+                           ELSE 0
+                       END AS 'Tiền phạt'
                 FROM PHIEU_MUON_TRA p
                 JOIN NGUOI_DUNG nd ON p.ma_nd_doc_gia = nd.ma_nd
                 JOIN DOC_GIA dg ON p.ma_nd_doc_gia = dg.ma_nd
@@ -225,12 +240,12 @@ namespace QLTV_covert_2._0.Forms
             // Tính tiền phạt
             decimal fine = _service.ScalarDecimal(@"
                 SELECT CASE WHEN julianday('now') > julianday(ngay_hen_tra)
-                    THEN (julianday('now') - julianday(ngay_hen_tra)) * 5000 ELSE 0 END
+                    THEN (julianday('now') - julianday(ngay_hen_tra)) * 1000 ELSE 0 END
                 FROM PHIEU_MUON_TRA WHERE ma_phieu = @id", new SQLiteParameter("@id", id));
 
             string msg = $"Xác nhận trả sách — Mã phiếu #{id}";
             if (fine > 0)
-                msg += $"\n⚠️ TIỀN PHẠT QUÁ HẠN: {fine:N0} VNĐ";
+                msg += $"\n⚠️ TIỀN PHẠT QUÁ HẠN: {fine.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))}đ";
             else
                 msg += "\n✅ Trả đúng hạn — Không phạt";
 
@@ -253,7 +268,12 @@ namespace QLTV_covert_2._0.Forms
 
             DataTable table = _service.Query(@"
                 SELECT p.*, nd.ho_ten, dg.ma_doc_gia, s.tieu_de, s.tac_gia,
-                       tl.ten_the_loai, nv_nd.ho_ten AS ten_nhan_vien, nv.ma_nhan_vien
+                       tl.ten_the_loai, nv_nd.ho_ten AS ten_nhan_vien, nv.ma_nhan_vien,
+                       CASE 
+                           WHEN p.trang_thai_phieu = 'DA_TRA' THEN COALESCE(p.tien_phat, 0)
+                           WHEN julianday('now') > julianday(p.ngay_hen_tra) THEN CAST((julianday('now') - julianday(p.ngay_hen_tra)) * 5000 AS INTEGER)
+                           ELSE 0
+                       END AS calculated_fine
                 FROM PHIEU_MUON_TRA p
                 JOIN NGUOI_DUNG nd ON p.ma_nd_doc_gia = nd.ma_nd
                 JOIN DOC_GIA dg ON p.ma_nd_doc_gia = dg.ma_nd
@@ -273,7 +293,7 @@ namespace QLTV_covert_2._0.Forms
                            $"📅 Ngày mượn: {(row["ngay_muon"] != DBNull.Value ? Convert.ToDateTime(row["ngay_muon"]).ToString("dd/MM/yyyy") : "")}\n" +
                            $"📅 Hạn trả: {(row["ngay_hen_tra"] != DBNull.Value ? Convert.ToDateTime(row["ngay_hen_tra"]).ToString("dd/MM/yyyy") : "")}\n" +
                            $"📅 Ngày trả: {(row["ngay_tra_thuc"] == DBNull.Value ? "Chưa trả" : Convert.ToDateTime(row["ngay_tra_thuc"]).ToString("dd/MM/yyyy"))}\n" +
-                           $"💰 Tiền phạt: {(row["tien_phat"] == DBNull.Value ? 0 : Convert.ToDecimal(row["tien_phat"])):N0} VNĐ\n\n" +
+                           $"💰 Tiền phạt tạm tính: {(row["calculated_fine"] == DBNull.Value ? "0đ" : Convert.ToDecimal(row["calculated_fine"]).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ")}\n\n" +
                            $"👤 NV xử lý: {row["ten_nhan_vien"]} ({row["ma_nhan_vien"]})";
 
             MessageBox.Show(info, "Chi tiết phiếu mượn", MessageBoxButtons.OK, MessageBoxIcon.Information);

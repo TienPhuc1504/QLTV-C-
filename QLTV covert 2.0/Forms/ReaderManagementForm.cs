@@ -22,6 +22,7 @@ namespace QLTV_covert_2._0.Forms
         private Guna2Button _btnRenewCard;
         private Guna2Button _btnPrintCard;
         private Guna2Button _btnHistory;
+        private Guna2Button _btnResetPassword;
 
         public ReaderManagementForm()
         {
@@ -156,7 +157,8 @@ namespace QLTV_covert_2._0.Forms
             _btnCreateCard = MakeButton("💳 Lập thẻ", AppTheme.Success, CreateCard);
             _btnRenewCard = MakeButton("🪪 Gia hạn", Color.FromArgb(23, 162, 184), UpdateCard);
             _btnPrintCard = MakeButton("🖨️ In thẻ", Color.MediumPurple, PrintCard);
-            _btnHistory = MakeButton("📜 Lịch sử", Color.FromArgb(108, 117, 125), ShowHistory);
+            _btnHistory = MakeButton("📜 Lịch sử mượn trả", Color.FromArgb(108, 117, 125), ShowHistory);
+            _btnResetPassword = MakeButton("🔑 Đặt lại MK", Color.DarkOrange, ResetPassword);
 
             actionPanel.Controls.Add(_btnEditReader);
             actionPanel.Controls.Add(_btnDeleteReader);
@@ -164,6 +166,7 @@ namespace QLTV_covert_2._0.Forms
             actionPanel.Controls.Add(_btnRenewCard);
             actionPanel.Controls.Add(_btnPrintCard);
             actionPanel.Controls.Add(_btnHistory);
+            actionPanel.Controls.Add(_btnResetPassword);
 
             // ═══════════════════════════════════════════════════════════
             //  DATA GRID — fills remaining space
@@ -290,20 +293,36 @@ namespace QLTV_covert_2._0.Forms
 
         private void PrintCard()
         {
-            int id = GetSelectedUserId();
-            if (id == 0) return;
-
-            if (MessageBox.Show("Bạn có muốn tạo yêu cầu in thẻ? Yêu cầu sẽ mất 7 ngày làm việc.", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (_grid.SelectedRows.Count == 0) return;
+            var row = _grid.SelectedRows[0];
+            string status = row.Cells["Trạng thái thẻ"].Value?.ToString() ?? "";
+            
+            if (status.Contains("Hoạt động"))
             {
-                try
-                {
-                    _service.Execute(@"
-                        INSERT INTO YEU_CAU_THE (ma_nd_doc_gia, ngay_yeu_cau, trang_thai, ngay_xu_ly)
-                        VALUES (@id, datetime('now'), 'DANG_XU_LY', datetime('now'))", 
-                        new SQLiteParameter("@id", id));
-                    MessageBox.Show("Đã tạo yêu cầu in thẻ. Thẻ sẽ được in sau 7 ngày.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                int userId = Convert.ToInt32(row.Cells["MaNd"].Value);
+                _service.Execute(@"
+                    INSERT INTO YEU_CAU_THE (ma_nd_doc_gia, ngay_yeu_cau, trang_thai)
+                    VALUES (@id, datetime('now'), 'DANG_XU_LY')", 
+                    new SQLiteParameter("@id", userId));
+                MessageBox.Show("Đã thêm yêu cầu in thẻ vào hàng chờ xử lý. Thời gian in dự kiến là 7 ngày.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadReaders();
+            }
+        }
+
+        private void ResetPassword()
+        {
+            if (_grid.SelectedRows.Count == 0) return;
+            var row = _grid.SelectedRows[0];
+            int userId = Convert.ToInt32(row.Cells["MaNd"].Value);
+            string readerCode = row.Cells["Mã ĐG"].Value?.ToString() ?? "";
+
+            if (MessageBox.Show($"Bạn có chắc chắn muốn đặt lại mật khẩu cho độc giả {readerCode} về mặc định không?\n(Mật khẩu mặc định: {readerCode.ToLower()})", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                string newPassHash = DatabaseManager.HashPassword(readerCode.ToLower());
+                _service.Execute("UPDATE TAI_KHOAN SET mat_khau = @pass WHERE ma_nd = @id",
+                    new SQLiteParameter("@pass", newPassHash),
+                    new SQLiteParameter("@id", userId));
+                MessageBox.Show("Đã đặt lại mật khẩu thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -357,8 +376,52 @@ namespace QLTV_covert_2._0.Forms
                     WHERE p.ma_nd_doc_gia = @id
                     ORDER BY p.ma_phieu DESC", new SQLiteParameter("@id", id));
 
+                grid.CellDoubleClick += (s, e) =>
+                {
+                    if (e.RowIndex >= 0)
+                    {
+                        int phieuId = Convert.ToInt32(grid.Rows[e.RowIndex].Cells["Mã phiếu"].Value);
+                        ViewBorrowDetail(phieuId);
+                    }
+                };
+
                 historyForm.ShowDialog(this);
             }
+        }
+
+        private void ViewBorrowDetail(int id)
+        {
+            DataTable table = _service.Query(@"
+                SELECT p.*, nd.ho_ten, dg.ma_doc_gia, s.tieu_de, s.tac_gia,
+                       tl.ten_the_loai, nv_nd.ho_ten AS ten_nhan_vien, nv.ma_nhan_vien,
+                       CASE 
+                           WHEN p.trang_thai_phieu = 'DA_TRA' THEN COALESCE(p.tien_phat, 0)
+                           WHEN julianday('now') > julianday(p.ngay_hen_tra) THEN CAST((julianday('now') - julianday(p.ngay_hen_tra)) * 5000 AS INTEGER)
+                           ELSE 0
+                       END AS calculated_fine
+                FROM PHIEU_MUON_TRA p
+                JOIN NGUOI_DUNG nd ON p.ma_nd_doc_gia = nd.ma_nd
+                JOIN DOC_GIA dg ON p.ma_nd_doc_gia = dg.ma_nd
+                JOIN SACH s ON p.ma_sach = s.ma_sach
+                LEFT JOIN THE_LOAI_SACH tl ON s.ma_the_loai = tl.ma_the_loai
+                LEFT JOIN NHAN_VIEN nv ON p.ma_nd_nhan_vien = nv.ma_nd
+                LEFT JOIN NGUOI_DUNG nv_nd ON nv.ma_nd = nv_nd.ma_nd
+                WHERE p.ma_phieu = @id", new SQLiteParameter("@id", id));
+
+            if (table.Rows.Count == 0) return;
+            DataRow row = table.Rows[0];
+
+            string info = $"═══ PHIẾU MƯỢN #{row["ma_phieu"]} ═══\n\n" +
+                           $"📚 Đọc giả: {row["ho_ten"]} ({row["ma_doc_gia"]})\n" +
+                           $"📖 Sách: {row["tieu_de"]} — {row["tac_gia"]}\n" +
+                           $"📁 Thể loại: {row["ten_the_loai"]}\n\n" +
+                           $"📅 Ngày mượn: {(row["ngay_muon"] != DBNull.Value ? Convert.ToDateTime(row["ngay_muon"]).ToString("dd/MM/yyyy") : "")}\n" +
+                           $"📅 Hạn trả: {(row["ngay_hen_tra"] != DBNull.Value ? Convert.ToDateTime(row["ngay_hen_tra"]).ToString("dd/MM/yyyy") : "")}\n" +
+                           $"📅 Ngày trả: {(row["ngay_tra_thuc"] == DBNull.Value ? "Chưa trả" : Convert.ToDateTime(row["ngay_tra_thuc"]).ToString("dd/MM/yyyy"))}\n" +
+                           $"💰 Tiền phạt tạm tính: {(row["calculated_fine"] == DBNull.Value ? "0đ" : Convert.ToDecimal(row["calculated_fine"]).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ")}\n\n" +
+                           $"👤 NV xử lý: {row["ten_nhan_vien"]} ({row["ma_nhan_vien"]})";
+
+            MessageBox.Show(info, "Chi tiết phiếu mượn", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         // ═══════════════════════════════════════════════════════════════

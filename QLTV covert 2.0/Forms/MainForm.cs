@@ -398,7 +398,8 @@ namespace QLTV_covert_2._0.Forms
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = @"SELECT ma_thong_bao, tieu_de, noi_dung, ngay_tao, link_lien_quan, loai_thong_bao
-                            FROM THONG_BAO ORDER BY datetime(ngay_tao) DESC";
+                            FROM THONG_BAO WHERE ma_nd = @userId AND da_doc = 0 ORDER BY datetime(ngay_tao) DESC";
+                        command.Parameters.AddWithValue("@userId", _currentUser.MaNguoiDung);
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -492,17 +493,28 @@ namespace QLTV_covert_2._0.Forms
                     stats.TotalBooks = ExecInt(c, "SELECT COUNT(*) FROM SACH");
                     stats.Borrowing = ExecInt(c, "SELECT COUNT(*) FROM PHIEU_MUON_TRA WHERE trang_thai_phieu = 'DANG_MUON'");
                     stats.Overdue = ExecInt(c, "SELECT COUNT(*) FROM PHIEU_MUON_TRA WHERE trang_thai_phieu IN ('DANG_MUON', 'QUA_HAN') AND date(ngay_hen_tra) < date('now')");
-                    stats.Fines = ExecDec(c, "SELECT COALESCE(SUM(tien_phat), 0) FROM PHIEU_MUON_TRA");
-                    stats.UnreadNotifications = ExecInt(c, "SELECT COUNT(*) FROM THONG_BAO WHERE da_doc = 0");
+                    stats.Fines = ExecDec(c, @"
+                        SELECT 
+                            COALESCE(SUM(tien_phat), 0) + 
+                            COALESCE(SUM(CASE WHEN trang_thai_phieu != 'DA_TRA' AND julianday('now') > julianday(ngay_hen_tra) 
+                                              THEN CAST((julianday('now') - julianday(ngay_hen_tra)) * 5000 AS INTEGER) 
+                                              ELSE 0 END), 0) 
+                        FROM PHIEU_MUON_TRA");
+                    stats.UnreadNotifications = ExecInt(c, "SELECT COUNT(*) FROM THONG_BAO WHERE da_doc = 0 AND ma_nd = @userId", new SQLiteParameter("@userId", _currentUser.MaNguoiDung));
                 }
             }
             catch { }
             return stats;
         }
 
-        private int ExecInt(SQLiteConnection c, string q)
+        private int ExecInt(SQLiteConnection c, string q, params SQLiteParameter[] parameters)
         {
-            using (var cmd = c.CreateCommand()) { cmd.CommandText = q; var v = cmd.ExecuteScalar(); return v == null || v == DBNull.Value ? 0 : Convert.ToInt32(v); }
+            using (var cmd = c.CreateCommand()) { 
+                cmd.CommandText = q; 
+                if (parameters != null) cmd.Parameters.AddRange(parameters);
+                var v = cmd.ExecuteScalar(); 
+                return v == null || v == DBNull.Value ? 0 : Convert.ToInt32(v); 
+            }
         }
 
         private decimal ExecDec(SQLiteConnection c, string q)
@@ -510,7 +522,7 @@ namespace QLTV_covert_2._0.Forms
             using (var cmd = c.CreateCommand()) { cmd.CommandText = q; var v = cmd.ExecuteScalar(); return v == null || v == DBNull.Value ? 0 : Convert.ToDecimal(v); }
         }
 
-        private string FormatCurrency(decimal v) => v == 0 ? "0đ" : string.Format("{0:N0}đ", v);
+        private string FormatCurrency(decimal v) => v == 0 ? "0đ" : v.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ";
         private string FormatDate(string v) { DateTime d; return DateTime.TryParse(v, out d) ? d.ToString("dd/MM/yyyy") : v; }
 
         private void OpenChildForm(Form childForm)

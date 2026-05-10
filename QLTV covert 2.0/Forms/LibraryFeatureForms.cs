@@ -643,6 +643,7 @@ namespace QLTV_covert_2._0.Forms
     {
         public StaffManagementForm() : base("👔 Quản lý Nhân viên")
         {
+            AddExtraButton("🔑 Đặt lại MK", Color.DarkOrange, ResetPassword);
         }
 
         protected override void LoadData()
@@ -680,6 +681,23 @@ namespace QLTV_covert_2._0.Forms
                 LoadData();
             }
         }
+
+        private void ResetPassword()
+        {
+            if (Grid.SelectedRows.Count == 0) return;
+            var row = Grid.SelectedRows[0];
+            int userId = Convert.ToInt32(row.Cells["Mã"].Value);
+            string staffCode = row.Cells["Mã NV"].Value?.ToString() ?? "";
+
+            if (MessageBox.Show($"Bạn có chắc chắn muốn đặt lại mật khẩu cho nhân viên {staffCode} về mặc định không?\n(Mật khẩu mặc định: {staffCode.ToLower()})", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                string newPassHash = DatabaseManager.HashPassword(staffCode.ToLower());
+                Service.Execute("UPDATE TAI_KHOAN SET mat_khau = @pass WHERE ma_nd = @id",
+                    new SQLiteParameter("@pass", newPassHash),
+                    new SQLiteParameter("@id", userId));
+                MessageBox.Show("Đã đặt lại mật khẩu thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
     }
 
     internal class StaffEditDialog : Form
@@ -700,7 +718,7 @@ namespace QLTV_covert_2._0.Forms
 
         private void Build()
         {
-            Size = new Size(430, 430);
+            Size = new Size(430, 450);
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             Padding = new Padding(20);
@@ -1114,6 +1132,7 @@ namespace QLTV_covert_2._0.Forms
         public SearchBooksForm(User user) : base("Tìm kiếm Sách")
         {
             _user = user;
+            ClearBottomButtons();
             AddExtraButton("Gửi yêu cầu mượn", Color.FromArgb(46, 204, 113), RequestBorrow);
         }
 
@@ -1121,7 +1140,12 @@ namespace QLTV_covert_2._0.Forms
         {
             Grid.DataSource = Service.Query(@"
                 SELECT s.ma_sach AS 'Mã', s.tieu_de AS 'Tiêu đề', s.tac_gia AS 'Tác giả',
-                       tl.ten_the_loai AS 'Thể loại', s.loai_sach AS 'Loại',
+                       tl.ten_the_loai AS 'Thể loại', 
+                       CASE s.loai_sach 
+                           WHEN 'SACH_ONLINE' THEN 'Sách online' 
+                           WHEN 'SACH_GIAY' THEN 'Sách giấy' 
+                           ELSE s.loai_sach 
+                       END AS 'Loại',
                        (SELECT COUNT(*) FROM QUYEN_SACH q WHERE q.ma_sach=s.ma_sach AND q.trang_thai='CO_SAN') AS 'Có sẵn'
                 FROM SACH s LEFT JOIN THE_LOAI_SACH tl ON s.ma_the_loai = tl.ma_the_loai
                 WHERE s.tieu_de LIKE @s OR s.tac_gia LIKE @s OR tl.ten_the_loai LIKE @s
@@ -1147,13 +1171,20 @@ namespace QLTV_covert_2._0.Forms
         public MyBorrowsForm(User user) : base("Sách của tôi")
         {
             _user = user;
+            ClearBottomButtons();
         }
 
         protected override void LoadData()
         {
             Grid.DataSource = Service.Query(@"
                 SELECT p.ma_phieu AS 'Mã phiếu', s.tieu_de AS 'Sách', strftime('%d/%m/%Y', p.ngay_muon) AS 'Ngày mượn',
-                       strftime('%d/%m/%Y', p.ngay_hen_tra) AS 'Hạn trả', COALESCE(strftime('%d/%m/%Y', p.ngay_tra_thuc), '-') AS 'Ngày trả', p.trang_thai_phieu AS 'Trạng thái'
+                       strftime('%d/%m/%Y', p.ngay_hen_tra) AS 'Hạn trả', COALESCE(strftime('%d/%m/%Y', p.ngay_tra_thuc), '-') AS 'Ngày trả', 
+                       CASE p.trang_thai_phieu
+                           WHEN 'DANG_MUON' THEN '📖 Đang mượn'
+                           WHEN 'DA_TRA' THEN '✅ Đã trả'
+                           WHEN 'QUA_HAN' THEN '⚠️ Quá hạn'
+                           ELSE p.trang_thai_phieu
+                       END AS 'Trạng thái'
                 FROM PHIEU_MUON_TRA p JOIN SACH s ON p.ma_sach = s.ma_sach
                 WHERE p.ma_nd_doc_gia = @id AND s.tieu_de LIKE @s
                 ORDER BY p.ma_phieu DESC", new SQLiteParameter("@id", _user.MaNguoiDung), new SQLiteParameter("@s", "%" + SearchText + "%"));
@@ -1169,6 +1200,7 @@ namespace QLTV_covert_2._0.Forms
         public MyRequestsForm(User user) : base("Yêu cầu của tôi")
         {
             _user = user;
+            ClearBottomButtons();
             AddExtraButton("Hủy yêu cầu", Color.FromArgb(231, 76, 60), Cancel);
         }
 
@@ -1176,8 +1208,16 @@ namespace QLTV_covert_2._0.Forms
         {
             Grid.DataSource = Service.Query(@"
                 SELECT yc.ma_yeu_cau AS 'Mã', s.tieu_de AS 'Sách', strftime('%d/%m/%Y', yc.ngay_yeu_cau) AS 'Ngày yêu cầu',
-                       yc.so_ngay_muon_de_xuat AS 'Số ngày', yc.trang_thai AS 'Trạng thái', yc.ghi_chu AS 'Ghi chú',
-                       yc.ngay_yeu_cau AS 'RawDate'
+                       yc.so_ngay_muon_de_xuat AS 'Số ngày', 
+                       CASE yc.trang_thai
+                           WHEN 'CHO_DUYET' THEN '⏳ Chờ duyệt'
+                           WHEN 'CHO_LAY_SACH' THEN '📦 Chờ lấy sách'
+                           WHEN 'DA_LAY' THEN '✅ Đã lấy'
+                           WHEN 'TU_CHOI' THEN '❌ Từ chối'
+                           WHEN 'DA_HUY' THEN '🚫 Đã hủy'
+                           ELSE yc.trang_thai
+                       END AS 'Trạng thái', 
+                       yc.ghi_chu AS 'Ghi chú', yc.ngay_yeu_cau AS 'RawDate'
                 FROM YEU_CAU_MUON yc JOIN SACH s ON yc.ma_sach = s.ma_sach
                 WHERE yc.ma_nd_doc_gia = @id AND s.tieu_de LIKE @s
                 ORDER BY RawDate DESC, yc.ma_yeu_cau DESC", new SQLiteParameter("@id", _user.MaNguoiDung), new SQLiteParameter("@s", "%" + SearchText + "%"));
@@ -1227,7 +1267,13 @@ namespace QLTV_covert_2._0.Forms
             int borrowed = _service.ScalarInt("SELECT COUNT(*) FROM PHIEU_MUON_TRA WHERE trang_thai_phieu='DANG_MUON'");
             int totalReaders = _service.ScalarInt("SELECT COUNT(*) FROM DOC_GIA");
             int overdue = _service.ScalarInt("SELECT COUNT(*) FROM PHIEU_MUON_TRA WHERE trang_thai_phieu='DANG_MUON' AND date(ngay_hen_tra)<date('now')");
-            decimal fines = _service.ScalarDecimal("SELECT COALESCE(SUM(tien_phat),0) FROM PHIEU_MUON_TRA");
+            decimal fines = _service.ScalarDecimal(@"
+                SELECT 
+                    COALESCE(SUM(tien_phat), 0) + 
+                    COALESCE(SUM(CASE WHEN trang_thai_phieu != 'DA_TRA' AND julianday('now') > julianday(ngay_hen_tra) 
+                                      THEN CAST((julianday('now') - julianday(ngay_hen_tra)) * 5000 AS INTEGER) 
+                                      ELSE 0 END), 0) 
+                FROM PHIEU_MUON_TRA");
 
             var cardsPanel = new TableLayoutPanel
             {
@@ -1242,7 +1288,7 @@ namespace QLTV_covert_2._0.Forms
             cardsPanel.Controls.Add(AppTheme.CreateStatCard(borrowed.ToString(), "Đang mượn", AppTheme.Success), 1, 0);
             cardsPanel.Controls.Add(AppTheme.CreateStatCard(totalReaders.ToString(), "Tổng độc giả", AppTheme.Secondary), 2, 0);
             cardsPanel.Controls.Add(AppTheme.CreateStatCard(overdue.ToString(), "Quá hạn", AppTheme.Danger), 3, 0);
-            cardsPanel.Controls.Add(AppTheme.CreateStatCard(fines.ToString("N0") + "đ", "Tiền phạt", AppTheme.Warning), 4, 0);
+            cardsPanel.Controls.Add(AppTheme.CreateStatCard(fines > 0 ? fines.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ" : "0đ", "Tiền phạt", AppTheme.Warning), 4, 0);
 
             // View switching + export buttons
             var exportPanel = new FlowLayoutPanel
@@ -1271,6 +1317,17 @@ namespace QLTV_covert_2._0.Forms
             // Detail grid
             _detailGrid = new Guna2DataGridView { Dock = DockStyle.Fill };
             AppTheme.StyleGrid(_detailGrid);
+            _detailGrid.CellFormatting += (s, e) =>
+            {
+                if (e.ColumnIndex >= 0 && _detailGrid.Columns[e.ColumnIndex].Name == "Tiền phạt" && e.Value != null)
+                {
+                    if (decimal.TryParse(e.Value.ToString(), out decimal val))
+                    {
+                        e.Value = val > 0 ? val.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + "đ" : "0đ";
+                        e.FormattingApplied = true;
+                    }
+                }
+            };
             Controls.Add(_detailGrid);
             _detailGrid.BringToFront();
 
@@ -1299,7 +1356,11 @@ namespace QLTV_covert_2._0.Forms
                            WHEN 'DANG_MUON' THEN CASE WHEN date(p.ngay_hen_tra) < date('now') THEN '⚠️ Quá hạn' ELSE '📖 Đang mượn' END
                            ELSE p.trang_thai_phieu
                        END AS 'Trạng thái',
-                       COALESCE(p.tien_phat,0) AS 'Tiền phạt'
+                       CASE 
+                           WHEN p.trang_thai_phieu = 'DA_TRA' THEN COALESCE(p.tien_phat, 0)
+                           WHEN julianday('now') > julianday(p.ngay_hen_tra) AND p.trang_thai_phieu != 'DA_TRA' THEN CAST((julianday('now') - julianday(p.ngay_hen_tra)) * 5000 AS INTEGER)
+                           ELSE 0
+                       END AS 'Tiền phạt'
                 FROM PHIEU_MUON_TRA p
                 JOIN NGUOI_DUNG nd ON p.ma_nd_doc_gia=nd.ma_nd
                 JOIN SACH s ON p.ma_sach=s.ma_sach ORDER BY p.ma_phieu DESC");
@@ -1322,34 +1383,172 @@ namespace QLTV_covert_2._0.Forms
 
     public class AccountForm : Form
     {
+        private readonly User _user;
+        private readonly LibraryService _service;
+
         public AccountForm(User user)
         {
-            var service = new LibraryService(DatabaseManager.Instance);
+            _user = user;
+            _service = new LibraryService(DatabaseManager.Instance);
+
             Text = "Thông tin tài khoản";
             Dock = DockStyle.Fill;
-            Padding = new Padding(24);
-            Font = new Font("Segoe UI", 10F);
-            var info = new Label
+            Padding = new Padding(30);
+            BackColor = AppTheme.ContentBg;
+            AutoScroll = true;
+
+            var title = new Label
+            {
+                Text = "TÀI KHOẢN CỦA TÔI",
+                Font = AppTheme.HeadingLarge,
+                ForeColor = AppTheme.TextDark,
+                Dock = DockStyle.Top,
+                Height = 60
+            };
+            Controls.Add(title);
+
+            var mainLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
-                Height = 150,
-                Font = new Font("Segoe UI", 12F),
-                Text = $"Họ tên: {user.HoTen}\nVai trò: {user.LoaiNguoiDung}\nEmail: {user.Email}\nSĐT: {user.SoDT}\nĐịa chỉ: {user.DiaChi}"
+                Height = 480,
+                ColumnCount = 2,
+                RowCount = 1,
+                BackColor = Color.Transparent,
             };
-            Controls.Add(info);
-            var oldPass = new Guna2TextBox { PlaceholderText = "Mật khẩu cũ", PasswordChar = '●', Dock = DockStyle.Top, Height = 38 };
-            var newPass = new Guna2TextBox { PlaceholderText = "Mật khẩu mới", PasswordChar = '●', Dock = DockStyle.Top, Height = 38 };
-            var button = new Guna2Button { Text = "Đổi mật khẩu", Dock = DockStyle.Top, Height = 38, FillColor = Color.FromArgb(52, 152, 219), ForeColor = Color.White };
-            button.Click += (s, e) =>
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            Controls.Add(mainLayout);
+            mainLayout.BringToFront();
+
+            // Profile Card
+            var profileCard = CreateCard("👤 Thông tin cá nhân");
+            var profileLayout = new FlowLayoutPanel 
+            { 
+                Dock = DockStyle.Fill, 
+                FlowDirection = FlowDirection.TopDown, 
+                WrapContents = false, 
+                Padding = new Padding(10) 
+            };
+            profileCard.Controls.Add(profileLayout);
+            profileLayout.BringToFront();
+
+            AddProfileRow(profileLayout, "Họ và tên:", _user.HoTen, true);
+            AddProfileRow(profileLayout, "Vai trò:", GetRoleName(_user.LoaiNguoiDung), false);
+            AddProfileRow(profileLayout, "Email:", _user.Email, false);
+            AddProfileRow(profileLayout, "Số điện thoại:", _user.SoDT, false);
+            AddProfileRow(profileLayout, "Địa chỉ:", _user.DiaChi, false);
+
+            mainLayout.Controls.Add(profileCard, 0, 0);
+
+            // Password Card
+            var passCard = CreateCard("🔒 Đổi mật khẩu");
+            var passLayout = new FlowLayoutPanel 
+            { 
+                Dock = DockStyle.Fill, 
+                FlowDirection = FlowDirection.TopDown, 
+                WrapContents = false, 
+                Padding = new Padding(10) 
+            };
+            passCard.Controls.Add(passLayout);
+            passLayout.BringToFront();
+
+            var oldPass = AppTheme.CreateLightInput("Mật khẩu hiện tại", true);
+            oldPass.Width = 350; oldPass.Margin = new Padding(0, 0, 0, 15);
+            var newPass = AppTheme.CreateLightInput("Mật khẩu mới", true);
+            newPass.Width = 350; newPass.Margin = new Padding(0, 0, 0, 15);
+            var confirmPass = AppTheme.CreateLightInput("Xác nhận mật khẩu mới", true);
+            confirmPass.Width = 350; confirmPass.Margin = new Padding(0, 0, 0, 20);
+
+            var btnChange = AppTheme.CreatePrimaryButton("Cập nhật mật khẩu", 200, 42);
+            btnChange.Margin = new Padding(0, 10, 0, 0);
+            
+            btnChange.Click += (s, e) =>
             {
-                if (service.ChangePassword(user.MaNguoiDung, oldPass.Text, newPass.Text))
-                    MessageBox.Show("Đổi mật khẩu thành công.");
+                if (string.IsNullOrWhiteSpace(oldPass.Text) || string.IsNullOrWhiteSpace(newPass.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập đầy đủ thông tin.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if (newPass.Text != confirmPass.Text)
+                {
+                    MessageBox.Show("Mật khẩu xác nhận không khớp.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if (_service.ChangePassword(_user.MaNguoiDung, oldPass.Text, newPass.Text))
+                {
+                    MessageBox.Show("Đổi mật khẩu thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    oldPass.Text = ""; newPass.Text = ""; confirmPass.Text = "";
+                }
                 else
-                    MessageBox.Show("Mật khẩu cũ không đúng.");
+                {
+                    MessageBox.Show("Mật khẩu hiện tại không đúng.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             };
-            Controls.Add(button);
-            Controls.Add(newPass);
-            Controls.Add(oldPass);
+
+            passLayout.Controls.Add(CreateInputLabel("Mật khẩu hiện tại"));
+            passLayout.Controls.Add(oldPass);
+            passLayout.Controls.Add(CreateInputLabel("Mật khẩu mới"));
+            passLayout.Controls.Add(newPass);
+            passLayout.Controls.Add(CreateInputLabel("Xác nhận mật khẩu mới"));
+            passLayout.Controls.Add(confirmPass);
+            passLayout.Controls.Add(btnChange);
+
+            mainLayout.Controls.Add(passCard, 1, 0);
+        }
+
+        private string GetRoleName(string raw)
+        {
+            if (raw == "ADMIN") return "Quản trị viên";
+            if (raw == "NHAN_VIEN") return "Nhân viên thư viện";
+            return "Độc giả";
+        }
+
+        private Guna2Panel CreateCard(string title)
+        {
+            var pnl = new Guna2Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderRadius = AppTheme.RadiusMedium,
+                FillColor = AppTheme.CardWhite,
+                Margin = new Padding(10),
+                Padding = new Padding(24),
+                BorderColor = AppTheme.BorderLight,
+                BorderThickness = 1
+            };
+
+            var lblTitle = new Label
+            {
+                Text = title,
+                Font = AppTheme.HeadingMedium,
+                ForeColor = AppTheme.Primary,
+                Dock = DockStyle.Top,
+                Height = 50
+            };
+            pnl.Controls.Add(lblTitle);
+
+            return pnl;
+        }
+
+        private void AddProfileRow(FlowLayoutPanel layout, string label, string value, bool isHighlight)
+        {
+            var pnl = new Panel { Width = 400, Height = 56, Padding = new Padding(0, 10, 0, 10), Margin = new Padding(0) };
+            
+            pnl.Controls.Add(new Label { Text = string.IsNullOrEmpty(value) ? "—" : value, Dock = DockStyle.Fill, Font = isHighlight ? AppTheme.HeadingSmall : AppTheme.BodyMedium, ForeColor = AppTheme.TextDark, TextAlign = ContentAlignment.MiddleLeft });
+            pnl.Controls.Add(new Label { Text = label, Dock = DockStyle.Left, Width = 120, Font = AppTheme.BodyMedium, ForeColor = AppTheme.TextDarkSecondary, TextAlign = ContentAlignment.MiddleLeft });
+            
+            layout.Controls.Add(pnl);
+        }
+
+        private Label CreateInputLabel(string text)
+        {
+            return new Label
+            {
+                Text = text,
+                Font = AppTheme.BodySmall,
+                ForeColor = AppTheme.TextDarkSecondary,
+                AutoSize = true,
+                Margin = new Padding(0, 5, 0, 6)
+            };
         }
     }
 
