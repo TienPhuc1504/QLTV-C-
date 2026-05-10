@@ -1367,8 +1367,8 @@ namespace QLTV_covert_2._0.Forms
             viewTop.Click += (s, e) => LoadTopBorrowed();
             exportPanel.Controls.Add(viewTop);
 
-            var exportBtn = new Guna2Button { Text = "📥 Xuất CSV", Width = 130, Height = 36, BorderRadius = 5, FillColor = Color.FromArgb(16, 185, 129), ForeColor = Color.White, Font = new Font("Segoe UI", 9F), Margin = new Padding(0, 0, 8, 0) };
-            exportBtn.Click += (s, e) => AppTheme.ExportGridToCsv(_detailGrid, "ThongKe");
+            var exportBtn = new Guna2Button { Text = "📥 Xuất Excel", Width = 130, Height = 36, BorderRadius = 5, FillColor = Color.FromArgb(16, 185, 129), ForeColor = Color.White, Font = new Font("Segoe UI", 9F), Margin = new Padding(0, 0, 8, 0) };
+            exportBtn.Click += (s, e) => AppTheme.ExportGridToExcel(_detailGrid, "ThongKe");
             exportPanel.Controls.Add(exportBtn);
 
             // Detail grid
@@ -1750,7 +1750,7 @@ namespace QLTV_covert_2._0.Forms
             _bottomBar.Controls.Add(MkBtn("➕ Thêm", AppTheme.Success, Add));
             _bottomBar.Controls.Add(MkBtn("✏️ Sửa", AppTheme.Info, Edit));
             _bottomBar.Controls.Add(MkBtn("🗑️ Xóa", AppTheme.Danger, Delete));
-            _bottomBar.Controls.Add(MkBtn("📥 Xuất CSV", Color.FromArgb(108, 117, 125), () => AppTheme.ExportGridToCsv(Grid, title.Replace(" ", "_"))));
+            _bottomBar.Controls.Add(MkBtn("📥 Xuất Excel", Color.FromArgb(108, 117, 125), () => AppTheme.ExportGridToExcel(Grid, title.Replace(" ", "_"))));
 
             // ═══════════════════════════════════════════════════════════
             //  DATA GRID — fills remaining space

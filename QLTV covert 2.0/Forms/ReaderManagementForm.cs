@@ -159,6 +159,7 @@ namespace QLTV_covert_2._0.Forms
             _btnPrintCard = MakeButton("🖨️ In thẻ", Color.MediumPurple, PrintCard);
             _btnHistory = MakeButton("📜 Lịch sử mượn trả", Color.FromArgb(108, 117, 125), ShowHistory);
             _btnResetPassword = MakeButton("🔑 Đặt lại MK", Color.DarkOrange, ResetPassword);
+            var btnExportExcel = MakeButton("📥 Xuất Excel", Color.FromArgb(16, 185, 129), () => AppTheme.ExportGridToExcel(_grid, "DanhSachDocGia"));
 
             actionPanel.Controls.Add(_btnEditReader);
             actionPanel.Controls.Add(_btnDeleteReader);
@@ -167,6 +168,7 @@ namespace QLTV_covert_2._0.Forms
             actionPanel.Controls.Add(_btnPrintCard);
             actionPanel.Controls.Add(_btnHistory);
             actionPanel.Controls.Add(_btnResetPassword);
+            actionPanel.Controls.Add(btnExportExcel);
 
             // ═══════════════════════════════════════════════════════════
             //  DATA GRID — fills remaining space

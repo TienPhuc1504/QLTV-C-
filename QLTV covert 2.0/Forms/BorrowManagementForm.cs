@@ -149,6 +149,7 @@ namespace QLTV_covert_2._0.Forms
 
             actionPanel.Controls.Add(MakeButton("📥 Trả sách", AppTheme.Success, ReturnBook));
             actionPanel.Controls.Add(MakeButton("👁️ Chi tiết", AppTheme.Info, ViewDetail));
+            actionPanel.Controls.Add(MakeButton("📥 Xuất Excel", Color.FromArgb(16, 185, 129), () => AppTheme.ExportGridToExcel(_grid, "DanhSachPhieuMuon")));
 
             // ═══════════════════════════════════════════════════════════
             //  DATA GRID — fills remaining space

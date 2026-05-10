@@ -278,44 +278,124 @@ namespace QLTV_covert_2._0.Utilities
         }
 
         /// <summary>
-        /// Exports a DataGridView's content to CSV file via SaveFileDialog.
+        /// Exports a DataGridView's content to a beautifully formatted Excel file using COM late binding.
         /// </summary>
-        public static void ExportGridToCsv(DataGridView grid, string defaultName = "export")
+        public static void ExportGridToExcel(DataGridView grid, string defaultName = "export")
         {
             if (grid.Rows.Count == 0) { MessageBox.Show("Không có dữ liệu để xuất.", "Thông báo"); return; }
 
-            using (var sfd = new SaveFileDialog())
+            try
             {
-                sfd.Filter = "CSV (*.csv)|*.csv|All files (*.*)|*.*";
-                sfd.FileName = defaultName + "_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv";
-                if (sfd.ShowDialog() != DialogResult.OK) return;
-
-                try
+                // Use late binding to avoid adding COM references
+                System.Type excelType = System.Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null)
                 {
-                    using (var sw = new System.IO.StreamWriter(sfd.FileName, false, System.Text.Encoding.UTF8))
-                    {
-                        // Headers
-                        var headers = new System.Collections.Generic.List<string>();
-                        foreach (DataGridViewColumn col in grid.Columns)
-                            if (col.Visible) headers.Add("\"" + col.HeaderText.Replace("\"", "\"\"") + "\"");
-                        sw.WriteLine(string.Join(",", headers));
+                    MessageBox.Show("Không tìm thấy Microsoft Excel trên máy tính này. Vui lòng cài đặt Excel để sử dụng chức năng xuất trực quan.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                        // Rows
-                        foreach (DataGridViewRow row in grid.Rows)
+                dynamic excelApp = System.Activator.CreateInstance(excelType);
+                excelApp.Visible = false;
+                excelApp.DisplayAlerts = false;
+                dynamic workbook = excelApp.Workbooks.Add();
+                dynamic worksheet = workbook.Worksheets[1];
+                worksheet.Name = "Dữ liệu xuất";
+
+                // Title row
+                worksheet.Cells[1, 1] = "BÁO CÁO THỐNG KÊ";
+                worksheet.Cells[1, 1].Font.Size = 16;
+                worksheet.Cells[1, 1].Font.Bold = true;
+                worksheet.Cells[1, 1].Font.Color = System.Drawing.ColorTranslator.ToOle(Color.Black);
+
+                int colIndex = 1;
+                // Headers
+                foreach (DataGridViewColumn col in grid.Columns)
+                {
+                    if (col.Visible)
+                    {
+                        var cell = worksheet.Cells[3, colIndex];
+                        cell.Value = col.HeaderText;
+                        // Format header
+                        cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(Color.LightGray); // Light Gray background for contrast
+                        cell.Font.Color = System.Drawing.ColorTranslator.ToOle(Color.Black);
+                        cell.Font.Bold = true;
+                        cell.Borders.LineStyle = 1; // xlContinuous
+                        colIndex++;
+                    }
+                }
+
+                // Data Rows
+                int rowIndex = 4;
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    colIndex = 1;
+                    foreach (DataGridViewColumn col in grid.Columns)
+                    {
+                        if (col.Visible)
                         {
-                            var cells = new System.Collections.Generic.List<string>();
-                            foreach (DataGridViewColumn col in grid.Columns)
-                                if (col.Visible)
-                                    cells.Add("\"" + (row.Cells[col.Index].Value?.ToString() ?? "").Replace("\"", "\"\"") + "\"");
-                            sw.WriteLine(string.Join(",", cells));
+                            var cell = worksheet.Cells[rowIndex, colIndex];
+                            // Prefix string to prevent scientific notation/date conversion issues for text
+                            var cellValue = row.Cells[col.Index].Value?.ToString();
+                            if (cellValue != null && (cellValue.StartsWith("0") || cellValue.Contains("/")))
+                            {
+                                cell.NumberFormat = "@"; // Text format
+                            }
+                            cell.Value = cellValue;
+                            cell.Font.Color = System.Drawing.ColorTranslator.ToOle(Color.Black);
+                            cell.Borders.LineStyle = 1; // xlContinuous
+                            
+                            // Alternate row color
+                            if (rowIndex % 2 == 1)
+                            {
+                                cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(Color.FromArgb(248, 250, 252));
+                            }
+                            
+                            colIndex++;
                         }
                     }
-                    MessageBox.Show("Xuất dữ liệu thành công!\n" + sfd.FileName, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    rowIndex++;
                 }
-                catch (System.Exception ex)
+
+                // AutoFit columns
+                worksheet.Columns.AutoFit();
+
+                using (var sfd = new SaveFileDialog())
                 {
-                    MessageBox.Show("Lỗi khi xuất: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    sfd.Filter = "Excel Workbook (*.xlsx)|*.xlsx|Excel 97-2003 Workbook (*.xls)|*.xls";
+                    sfd.FileName = defaultName + "_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx";
+                    if (sfd.ShowDialog() == DialogResult.OK)
+                    {
+                        // 51 is the enumeration value for xlOpenXMLWorkbook (.xlsx)
+                        // 56 is xlExcel8 (.xls)
+                        int fileFormat = sfd.FileName.EndsWith(".xlsx") ? 51 : 56;
+                        workbook.SaveAs(sfd.FileName, fileFormat);
+                        MessageBox.Show("Xuất dữ liệu thành công!\n" + sfd.FileName, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        
+                        // Ask user if they want to open the file
+                        if (MessageBox.Show("Bạn có muốn mở file vừa xuất không?", "Mở file", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            // Thay vì Process.Start (gây xung đột COM), ta cho hiển thị luôn Excel đang chạy ngầm
+                            excelApp.Visible = true;
+                            
+                            // Chỉ giải phóng object, KHÔNG đóng workbook hay quit ứng dụng để người dùng sử dụng
+                            if (worksheet != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                            if (workbook != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                            if (excelApp != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+                            return;
+                        }
+                    }
                 }
+
+                // Nếu người dùng chọn "No" hoặc Hủy lưu file
+                workbook.Close(false);
+                excelApp.Quit();
+                if (worksheet != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                if (workbook != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                if (excelApp != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Lỗi khi xuất dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

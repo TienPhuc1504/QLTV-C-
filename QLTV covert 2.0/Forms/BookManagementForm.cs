@@ -178,11 +178,13 @@ namespace QLTV_covert_2._0.Forms
             _viewBtn = MakeButton("👁️ Chi tiết", Color.FromArgb(108, 117, 125), ViewDetail);
             _manageCopiesBtn = MakeButton("📦 Quản lý quyển", Color.FromArgb(23, 162, 184), ManageCopies);
             _manageCopiesBtn.Width = 160;
+            var btnExportExcel = MakeButton("📥 Xuất Excel", Color.FromArgb(16, 185, 129), () => AppTheme.ExportGridToExcel(_grid, "DanhSachSach"));
 
             actionPanel.Controls.Add(_editBtn);
             actionPanel.Controls.Add(_deleteBtn);
             actionPanel.Controls.Add(_viewBtn);
             actionPanel.Controls.Add(_manageCopiesBtn);
+            actionPanel.Controls.Add(btnExportExcel);
 
             // ═══════════════════════════════════════════════════════════
             //  DATA GRID — fills remaining space
