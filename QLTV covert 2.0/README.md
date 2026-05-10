@@ -1,217 +1,78 @@
-# 📚 QLTV - Quản Lý Thư Viện Số v2.0
+# 📚 QLTV - Hệ Thống Quản Lý Thư Viện v2.0
 
-## C# Windows Forms | Modern UI | Production Ready
-
----
-
-### ✨ Chuyển Đổi Thành Công: Python → C#
-
-Ứng dụng quản lý thư viện được chuyển đổi hoàn toàn từ **Python CustomTkinter** sang **C# Windows Forms** với nâng cấp giao diện sử dụng **Guna.UI2**.
+Một ứng dụng quản lý thư viện số toàn diện được xây dựng bằng C# Windows Forms với giao diện hiện đại (Modern UI), hỗ trợ đầy đủ các nghiệp vụ thư viện từ quản lý sách, độc giả đến mượn trả và thống kê.
 
 ---
 
-## 🚀 BẮTĐẦU NHANH
+## 🌟 Tính Năng Nổi Bật
 
-### 1. Mở Project
-```bash
-Visual Studio > File > Open Project
-→ D:\C#\QLTV covert 2.0\QLTV covert 2.0.csproj
-```
+Hệ thống được thiết kế với mô hình phân quyền chặt chẽ gồm 3 vai trò:
 
-### 2. Build
-```bash
-Ctrl + Shift + B
-```
+### 👑 Quản trị viên (Admin)
+- Toàn quyền hệ thống.
+- Quản lý tài khoản và thông tin nhân viên thư viện.
+- Khôi phục/đặt lại mật khẩu cho nhân viên.
+- Xem bảng thống kê tổng quan (Dashboard), báo cáo mượn trả và doanh thu tiền phạt.
 
-### 3. Chạy
-```bash
-F5
-```
+### 👔 Nhân viên Thư viện
+- **Quản lý Sách:** Thêm, sửa, xóa, tìm kiếm sách và thể loại sách. Hỗ trợ cả sách giấy và sách online (PDF).
+- **Quản lý Độc giả:** Cấp thẻ, gia hạn thẻ, khóa thẻ, yêu cầu in thẻ và xem lịch sử mượn trả của độc giả.
+- **Mượn/Trả Sách:** Xử lý yêu cầu mượn sách, lập phiếu mượn, xác nhận trả sách và tính tiền phạt quá hạn tự động.
+- Khôi phục/đặt lại mật khẩu cho độc giả về mặc định.
 
-### 4. Đăng Nhập
-```
-Username: admin
-Password: admin123
-```
+### 🎓 Độc giả
+- **Tra cứu:** Tìm kiếm sách trực tuyến trong thư viện với giao diện thân thiện.
+- **Yêu cầu mượn sách:** Gửi yêu cầu mượn sách trực tuyến đến nhân viên và theo dõi trạng thái yêu cầu.
+- **Tủ sách cá nhân:** Xem lịch sử các cuốn sách đang mượn, đã trả, hoặc quá hạn.
+- **Tài khoản:** Quản lý thông tin cá nhân và thay đổi mật khẩu.
 
 ---
 
-## 📖 Tài Liệu
+## 🚀 Hướng Dẫn Cài Đặt & Chạy
 
-| File | Mục Đích | Đọc |
-|------|---------|-----|
-| **START_HERE.md** | Điểm bắt đầu | ⭐⭐⭐ |
-| **INDEX.md** | Hướng dẫn điều hướng | 📖 |
-| **QUICKSTART.md** | Khởi động nhanh 5 phút | 🚀 |
-| **README_CS.md** | Hướng dẫn đầy đủ | 📚 |
-| **DEVELOPMENT.md** | Ghi chú kỹ thuật | 🛠️ |
-| **IMPLEMENTATION_GUIDE.md** | Phát triển Phase 2 | 📝 |
-| **FINAL_REPORT.md** | Báo cáo hoàn thành | ✅ |
-| **CHECKLIST.md** | Theo dõi tiến độ | ✔️ |
+### 1. Yêu cầu hệ thống
+- Visual Studio 2022 (hoặc phiên bản mới hơn)
+- .NET Framework 4.7.2 (hoặc tương thích)
+- Thư viện UI: `Guna.UI2.WinForms` và thư viện Database: `System.Data.SQLite.Core` (đã được cấu hình sẵn qua NuGet Packages).
 
----
-
-## ✅ BUILD STATUS
-
-| Status | Value |
-|--------|-------|
-| Build | ✅ **SUCCESS** |
-| Errors | ✅ **ZERO** |
-| Warnings | ✅ **ZERO** |
-| Tests | ✅ **PASSED** |
-| Docs | ✅ **COMPLETE** |
-| Ready | ✅ **YES** |
+### 2. Các bước chạy ứng dụng
+1. Mở file solution hoặc project (`QLTV covert 2.0.csproj`) bằng Visual Studio.
+2. Nhấn **Ctrl + Shift + B** để Build project (hệ thống sẽ tự động khôi phục các gói NuGet).
+3. Nhấn **F5** để khởi chạy ứng dụng.
 
 ---
 
-## 📊 Project Metrics
+## 👤 Tài Khoản Demo (Mặc định)
 
-- **Files**: 18 C# files
-- **Lines**: ~5,000 LOC
-- **Classes**: 20+
-- **Forms**: 8
-- **Dialogs**: 3
-- **Repositories**: 3
-- **Database**: SQLite
-- **Documentation**: 50+ pages
+Ngay trong lần đầu tiên chạy ứng dụng, hệ thống sẽ tự động tạo cơ sở dữ liệu và nạp sẵn các tài khoản mẫu sau để bạn dễ dàng trải nghiệm:
 
----
+| Vai trò | Tên đăng nhập | Mật khẩu |
+| :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` |
+| **Nhân viên** | `nhanvien` | `nv123` |
+| **Độc giả** | `docgia` | `dg123` |
 
-## 🎯 Tính Năng
-
-✅ Xác thực người dùng (3 vai trò)
-✅ Dashboard bảng điều khiển
-✅ Quản lý sách
-✅ Quản lý độc giả
-✅ Quản lý mượn/trả
-✅ Modern UI với Guna.UI2
-✅ Bảo mật (SHA256, SQL params)
-✅ SQLite database
+*(Lưu ý: Bạn có thể đăng nhập, sau đó vào tab Tài khoản để đổi mật khẩu)*
 
 ---
 
-## 🔧 Công Nghệ
+## 💾 Cơ Sở Dữ Liệu
 
-- **C# 7.3** + .NET Framework 4.7.2
-- **Windows Forms** + **Guna.UI2**
-- **SQLite** Database
-- **Visual Studio 2026**
-
----
-
-## 📁 Cấu Trúc
-
-```
-QLTV covert 2.0/
-├── Models/              (Data structures)
-├── Data/                (Database & repositories)
-├── Forms/               (Main forms)
-│   └── Dialogs/         (Dialog forms)
-├── Utilities/           (Config & helpers)
-├── Program.cs           (Entry point)
-└── 📄 Documentation files (50+ pages)
-```
+- **Hệ quản trị CSDL:** SQLite (Portable, gọn nhẹ)
+- **Đường dẫn lưu trữ DB:** Hệ thống sẽ tự động khởi tạo cơ sở dữ liệu tại thư mục `%APPDATA%\QLTV_CoVert_2.0\library.db`. Bạn không cần cài đặt SQL Server hay cấu hình chuỗi kết nối phức tạp.
+- **Cấu trúc:** Gồm các bảng chặt chẽ như: Người dùng, Tài khoản, Nhân viên, Độc giả, Thẻ độc giả, Sách, Thể loại, Quyển sách (bản vật lý), Phiếu mượn, Yêu cầu mượn, Thông báo hệ thống và Sách Online.
 
 ---
 
-## 👤 Demo Accounts
+## 🛠 Công Nghệ Sử Dụng
 
-```
-Admin:       admin / admin123
-Nhân viên:   nhanvien / nv123
-Độc giả:    docgia / dg123
-```
-
----
-
-## 💾 Database
-
-**Location**: `%APPDATA%\QLTV_CoVert_2.0\library.db`
-
-- Auto-created on first run
-- 8 tables with relationships
-- Sample data pre-loaded
-- SQLite format (portable)
+- **Ngôn ngữ:** C# 7.3+
+- **Nền tảng:** .NET Framework Windows Forms
+- **UI Framework:** [Guna.UI2](https://gunaframework.com/) cho giao diện mượt mà, hỗ trợ bo góc (border radius), shadow và các hiệu ứng động (animations) cao cấp.
+- **Database:** ADO.NET kết nối với SQLite.
+- **Bảo mật:** Mật khẩu được mã hóa băm SHA-256 trước khi lưu xuống Database. Sử dụng tham số hóa (Parameterized Queries) trên toàn bộ truy vấn để chống SQL Injection.
+- **Kiến trúc:** Phân tách logic quản lý dữ liệu (`LibraryService`, `DatabaseManager`) và UI (các file trong thư mục `Forms` và bộ màu `AppTheme`), giúp code dễ đọc, dễ bảo trì và mở rộng.
 
 ---
 
-## 🎓 What's Included
-
-✅ Complete source code
-✅ SQLite database schema
-✅ Modern UI components
-✅ Security features
-✅ Error handling
-✅ Sample data
-✅ Helper utilities
-✅ Comprehensive documentation
-
----
-
-## 🚀 Next Steps
-
-### For Users
-1. Read **START_HERE.md**
-2. Run the app (F5)
-3. Explore features
-4. Refer to **README_CS.md**
-
-### For Developers
-1. Read **FINAL_REPORT.md**
-2. Review code structure
-3. Read **IMPLEMENTATION_GUIDE.md**
-4. Start Phase 2 development
-
-### For Managers
-1. Read **FINAL_REPORT.md**
-2. Check **CHECKLIST.md**
-3. Review project metrics
-
----
-
-## 📞 Support
-
-**Questions?** Check documentation:
-- **How to**: START_HERE.md
-- **Navigation**: INDEX.md
-- **Technical**: DEVELOPMENT.md
-- **Troubleshooting**: QUICKSTART.md
-
----
-
-## ✨ Quality
-
-| Aspect | Score |
-|--------|-------|
-| Functionality | ⭐⭐⭐⭐⭐ |
-| Code Quality | ⭐⭐⭐⭐⭐ |
-| Documentation | ⭐⭐⭐⭐⭐ |
-| Security | ⭐⭐⭐⭐⭐ |
-| Performance | ⭐⭐⭐⭐☆ |
-
----
-
-## 📌 Key Information
-
-| Item | Value |
-|------|-------|
-| **Project** | QLTV v2.0 |
-| **Language** | C# 7.3 |
-| **Framework** | .NET Framework 4.7.2 |
-| **UI** | Windows Forms + Guna.UI2 |
-| **Database** | SQLite |
-| **Status** | ✅ Production Ready |
-| **Version** | 2.0 |
-| **Release** | 2026 |
-
----
-
-## 🎉 Ready?
-
-**Everything is set up and ready to go!**
-
-→ Open **START_HERE.md** now!
-
----
-
-*Last Updated: 2026 | Status: ✅ Complete | Version: 2.0*
+*Dự án được phát triển với mục tiêu cung cấp trải nghiệm hiện đại (Modern UX/UI) cho bài toán Quản lý Thư viện truyền thống trên môi trường Windows.*
