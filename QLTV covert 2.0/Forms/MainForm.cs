@@ -470,9 +470,31 @@ namespace QLTV_covert_2._0.Forms
                     var svc = new LibraryService(_db);
                     svc.Execute("UPDATE THONG_BAO SET da_doc = 1 WHERE ma_thong_bao = @id", new SQLiteParameter("@id", notificationId));
                     if (type == "YEU_CAU_MOI" || link.StartsWith("yeu_cau"))
-                    { ActivateMenuContaining("Yêu cầu"); OpenChildForm(new BorrowRequestsForm(_currentUser)); }
+                    { 
+                        if (_currentUser.LoaiNguoiDung == "DOC_GIA")
+                        {
+                            ActivateMenuContaining("Yêu cầu của tôi"); 
+                            OpenChildForm(new MyRequestsForm(_currentUser));
+                        }
+                        else
+                        {
+                            ActivateMenuContaining("Yêu cầu"); 
+                            OpenChildForm(new BorrowRequestsForm(_currentUser)); 
+                        }
+                    }
                     else if (link.StartsWith("phieu_muon"))
-                    { ActivateMenuContaining("Mượn"); OpenChildForm(new BorrowManagementForm(_currentUser)); }
+                    { 
+                        if (_currentUser.LoaiNguoiDung == "DOC_GIA")
+                        {
+                            ActivateMenuContaining("Sách của tôi"); 
+                            OpenChildForm(new MyBorrowsForm(_currentUser));
+                        }
+                        else
+                        {
+                            ActivateMenuContaining("Mượn"); 
+                            OpenChildForm(new BorrowManagementForm(_currentUser)); 
+                        }
+                    }
                     else
                     { ActivateMenuContaining("Thông báo"); OpenChildForm(new NotificationsForm(_currentUser)); }
                 };

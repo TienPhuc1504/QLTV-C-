@@ -1129,11 +1129,68 @@ namespace QLTV_covert_2._0.Forms
     public class SearchBooksForm : SimpleGridForm
     {
         private readonly User _user;
+        private Guna2Button _btnBorrow;
+        private Guna2Button _btnReadOnline;
+
         public SearchBooksForm(User user) : base("Tìm kiếm Sách")
         {
             _user = user;
             ClearBottomButtons();
-            AddExtraButton("Gửi yêu cầu mượn", Color.FromArgb(46, 204, 113), RequestBorrow);
+            _btnBorrow = AddExtraButton("Gửi yêu cầu mượn", Color.FromArgb(46, 204, 113), RequestBorrow);
+            _btnReadOnline = AddExtraButton("Đọc ngay", Color.FromArgb(52, 152, 219), ReadOnline);
+            
+            Grid.SelectionChanged += Grid_SelectionChanged;
+        }
+
+        private void Grid_SelectionChanged(object sender, EventArgs e)
+        {
+            if (Grid.SelectedRows.Count == 0) return;
+            var row = Grid.SelectedRows[0];
+            string type = row.Cells["Loại"].Value?.ToString() ?? "";
+            
+            if (type == "Sách online")
+            {
+                if (_btnBorrow != null) _btnBorrow.Visible = false;
+                if (_btnReadOnline != null) _btnReadOnline.Visible = true;
+            }
+            else
+            {
+                if (_btnBorrow != null) _btnBorrow.Visible = true;
+                if (_btnReadOnline != null) _btnReadOnline.Visible = false;
+            }
+        }
+
+        private void ReadOnline()
+        {
+            int id = SelectedId("Mã");
+            if (id == 0) return;
+            
+            string url = "https://example.com/sach-online";
+            try
+            {
+                var dt = Service.Query("SELECT url_tai_lieu FROM SACH_ONLINE WHERE ma_sach = @id", new SQLiteParameter("@id", id));
+                if (dt.Rows.Count > 0 && dt.Rows[0]["url_tai_lieu"] != DBNull.Value && !string.IsNullOrWhiteSpace(dt.Rows[0]["url_tai_lieu"].ToString()))
+                {
+                    url = dt.Rows[0]["url_tai_lieu"].ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch
+            {
+                MessageBox.Show($"Đang mở sách trực tuyến tại:\n{url}", "Đọc sách online", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         protected override void LoadData()
